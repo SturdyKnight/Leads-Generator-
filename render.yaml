@@ -1,0 +1,61 @@
+# Render deployment.
+#
+# Two services: the API and the static frontend. Both are needed — the previous
+# config defined only the backend, so a built bundle had nowhere to be served
+# from and no way to reach the API.
+#
+# After the first deploy, set these by hand in the dashboard:
+#   bmatrix-api      GOOGLE_PLACES_API_KEY, CORS_ORIGIN (the static site URL)
+#   bmatrix-web      VITE_API_URL (the API URL + /api)
+
+services:
+  - type: web
+    name: bmatrix-api
+    runtime: node
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    # Migrations run on every deploy; without this a fresh database has no tables.
+    buildCommand: >-
+      npm ci &&
+      npm run build --workspace=packages/shared &&
+      npx prisma migrate deploy --schema packages/backend/prisma/schema.prisma &&
+      npm run build --workspace=packages/backend
+    startCommand: npm run start --workspace=packages/backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bmatrix-db
+          property: connectionString
+      - key: GOOGLE_PLACES_API_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: LOG_LEVEL
+        value: info
+
+  - type: web
+    name: bmatrix-web
+    runtime: static
+    buildCommand: >-
+      npm ci &&
+      npm run build --workspace=packages/shared &&
+      npm run build --workspace=packages/frontend
+    staticPublishPath: packages/frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      # Client-side routing: every unmatched path serves the app shell.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: bmatrix-db
+    databaseName: bmatrix
+    plan: free

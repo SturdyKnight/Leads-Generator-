@@ -1,0 +1,174 @@
+// B-Matrix — single-operator lead generation platform.
+// No authentication: one implicit operator record owns every campaign and lead.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The single operator. Exists only to own campaigns and leads via foreign key.
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdLeads Lead[]     @relation("CreatedByUser")
+  campaigns    Campaign[]
+
+  @@map("users")
+}
+
+model Lead {
+  id          String  @id @default(uuid())
+  placeId     String
+  name        String
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  locality    String?
+  phone       String?
+  website     String?
+  email       String?
+  rating      Float?
+  reviewCount Int?
+  categories  String  @default("[]")
+  status      String  @default("DISCOVERED")
+  score       Int     @default(0)
+  source      String?
+  notes       String?
+
+  campaignId  String?
+  sessionId   String?
+  createdById String
+  contactedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  campaign  Campaign?         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  session   DiscoverySession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  createdBy User              @relation("CreatedByUser", fields: [createdById], references: [id])
+  logs      LeadActivity[]
+
+  // A business may appear in several campaigns, but only once per campaign.
+  @@unique([campaignId, placeId])
+  @@index([placeId])
+  @@index([campaignId, status])
+  @@index([sessionId])
+  @@index([score])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model Campaign {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  status      String  @default("ACTIVE") // ACTIVE | PAUSED | ARCHIVED
+  config      String  @default("{}")
+
+  // Denormalized stats, recomputed on write only — never on read.
+  totalLeads    Int    @default(0)
+  leadsByStatus String @default("{}")
+  avgScore      Float  @default(0)
+
+  createdById  String
+  startedAt    DateTime?
+  pausedAt     DateTime?
+  discoveredAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  createdBy User               @relation(fields: [createdById], references: [id])
+  tasks     CampaignTask[]
+  leads     Lead[]
+  sessions  DiscoverySession[]
+
+  @@index([status])
+  @@index([updatedAt])
+  @@map("campaigns")
+}
+
+model DiscoverySession {
+  id           String    @id @default(uuid())
+  campaignId   String
+  name         String
+  config       String    @default("{}")
+  status       String    @default("PENDING") // PENDING | RUNNING | COMPLETED | FAILED | INTERRUPTED
+  totalLeads   Int       @default(0)
+  error        String?
+  discoveredAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  campaign Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  leads    Lead[]
+  tasks    CampaignTask[]
+
+  @@index([campaignId])
+  @@index([status])
+  @@map("discovery_sessions")
+}
+
+model CampaignTask {
+  id          String    @id @default(uuid())
+  campaignId  String
+  sessionId   String?
+  type        String
+  query       String
+  status      String    @default("PENDING") // PENDING | RUNNING | COMPLETED | FAILED | SKIPPED
+  result      String?
+  error       String?
+  attempts    Int       @default(0)
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  campaign Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  session  DiscoverySession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([sessionId, status])
+  @@map("campaign_tasks")
+}
+
+model LeadActivity {
+  id        String   @id @default(uuid())
+  leadId    String
+  type      String // created | status_change | note_added | contacted
+  message   String
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, createdAt])
+  @@map("lead_activities")
+}
+
+model Settings {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+/// Daily Google Places call counts, aggregated globally. Not campaign-scoped:
+/// the API client has no campaign context at request time.
+model GoogleApiUsage {
+  id        String   @id @default(uuid())
+  method    String
+  date      String // YYYY-MM-DD
+  callCount Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([method, date])
+  @@map("google_api_usage")
+}

@@ -1,0 +1,103 @@
+# ─── Dependencies ────────────────────────────────────────────────
+node_modules/
+.npm/
+.pnp
+.pnp.js
+.yarn/cache/
+.yarn/unplugged/
+.yarn/install-state.gz
+
+# package-lock.json IS committed — the build depends on it.
+
+# ─── Build output ────────────────────────────────────────────────
+# shared → backend → frontend all emit to dist/
+dist/
+build/
+out/
+*.tsbuildinfo
+.vite/
+
+# ─── Environment / secrets — never commit real keys ──────────────
+# .env.example is committed so the required shape stays documented.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+serviceAccount*.json
+
+# ─── Prisma ──────────────────────────────────────────────────────
+# packages/backend/prisma/migrations/ IS committed — production runs
+# `prisma migrate deploy` against it. Only local artefacts are ignored.
+.prisma/
+packages/backend/prisma/dev.db*
+
+# ─── Local database leftovers (pre-Postgres SQLite) ──────────────
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+pgdata/
+
+# ─── Logs ────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── Tests / coverage ────────────────────────────────────────────
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# ─── Caches ──────────────────────────────────────────────────────
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.turbo/
+tmp/
+temp/
+
+# ─── Generated output (campaign .xlsx export endpoint) ───────────
+exports/
+uploads/
+*.xlsx
+
+# ─── Editors / IDE ───────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# ─── Agent / tooling local state ─────────────────────────────────
+.openclaude/settings.local.json
+.claude/settings.local.json
+.cursor/
+
+# ─── OS cruft ────────────────────────────────────────────────────
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ─── Misc ────────────────────────────────────────────────────────
+*.tgz
+*.zip
+*.bak
+*.orig
+*.rej

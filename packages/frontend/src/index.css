@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * The type scale, colour ramp, and shadows live in tailwind.config.ts — there is
+ * no parallel CSS custom-property system. One source of truth, so a value can
+ * never be defined in two places and drift. What lives here is only what
+ * Tailwind cannot express: base element defaults and the two multi-step
+ * animations (list stagger, skeleton sweep).
+ */
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    /* A shade deeper than the cards sit on it, so white surfaces read as
+       lifted rather than merging into the page. The single accent wash at the
+       top gives the page a light source; everything below is neutral. */
+    @apply bg-slate-100 text-slate-800 font-sans text-base antialiased;
+    background-image: radial-gradient(
+      110rem 40rem at 50% -18rem,
+      theme('colors.accent.100') 0%,
+      transparent 62%
+    );
+    background-attachment: fixed;
+  }
+
+  h1 {
+    @apply text-2xl font-semibold text-slate-900;
+    text-wrap: balance;
+  }
+
+  h2,
+  h3 {
+    @apply text-slate-900 font-semibold tracking-tight;
+    text-wrap: balance;
+  }
+
+  /* Focus is always visible for keyboard users and never for mouse clicks.
+     A transparent offset lets whatever surface is behind show through the gap,
+     so the ring works on both the page and on a card. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent-600 ring-offset-2 ring-offset-transparent rounded;
+  }
+
+  /* Digits that stack in columns must align. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full border-[3px] border-solid border-transparent bg-clip-content;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent-300 bg-clip-content;
+  }
+
+  ::selection {
+    @apply bg-accent-200 text-accent-900;
+  }
+}
+
+@layer components {
+  /*
+   * A list whose children enter one after another. The delay is capped at the
+   * eighth child — past that the last row would arrive noticeably late, which
+   * reads as the page being slow rather than as it being animated.
+   */
+  .stagger > * {
+    @apply animate-rise;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger > *:nth-child(6) { animation-delay: 200ms; }
+  .stagger > *:nth-child(7) { animation-delay: 240ms; }
+  .stagger > *:nth-child(n + 8) { animation-delay: 280ms; }
+
+  /* Loading placeholder. Held still for anyone who asked for less motion. */
+  .skeleton {
+    @apply bg-slate-200 rounded relative overflow-hidden;
+  }
+
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      theme('colors.slate.100') 50%,
+      transparent
+    );
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-sweep {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .skeleton::after {
+    display: none;
+  }
+}
