@@ -44,6 +44,7 @@ leads.get('/:id', leadController.findById);
 leads.get('/:id/activities', leadController.getActivities);
 leads.patch('/:id/status', validateBody(leadStatusSchema), leadController.updateStatus);
 leads.post('/:id/notes', validateBody(leadNoteSchema), leadController.addNote);
+leads.post('/:id/draft-outreach', expensiveLimiter, leadController.draftOutreach);
 leads.delete('/:id', leadController.delete);
 
 /* -------------------------------- sessions -------------------------------- */

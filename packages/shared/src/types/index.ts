@@ -151,6 +151,7 @@ export interface Lead {
   phone: string | null;
   website: string | null;
   email: string | null;
+  mobile: string | null;
   rating: number | null;
   reviewCount: number | null;
   categories: string[];
@@ -158,6 +159,10 @@ export interface Lead {
   score: number;
   source: string | null;
   notes: string | null;
+  // Franchise / chain detection — null means not yet classified.
+  isChain: boolean | null;
+  chainName: string | null;
+  outletCount: number | null;
   campaignId: string | null;
   sessionId: string | null;
   contactedAt: string | null;
@@ -165,9 +170,28 @@ export interface Lead {
   updatedAt: string;
 }
 
+export interface LeadEnrichment {
+  id: string;
+  leadId: string;
+  isChain: boolean | null;
+  chainName: string | null;
+  outletCount: number | null;
+  classification: string | null;
+  classifiedAt: string | null;
+  websiteSummary: string | null;
+  websiteTech: string | null;
+  websiteContact: string | null;
+  websiteIntelAt: string | null;
+  outreachDraft: string | null;
+  outreachDraftAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface LeadDetail extends Lead {
   campaign: { id: string; name: string } | null;
   session: { id: string; name: string } | null;
+  enrichment: LeadEnrichment | null;
   logs: LeadActivity[];
 }
 
@@ -214,4 +238,7 @@ export interface Settings {
   timezone: string;
   defaultCountry: string;
   defaultMaxResults: number;
+  aiClassificationEnabled: boolean;
+  aiWebsiteIntelEnabled: boolean;
+  aiOutreachEnabled: boolean;
 }

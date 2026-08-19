@@ -36,6 +36,7 @@ model Lead {
   phone       String?
   website     String?
   email       String?
+  mobile      String?
   rating      Float?
   reviewCount Int?
   categories  String  @default("[]")
@@ -44,17 +45,24 @@ model Lead {
   source      String?
   notes       String?
 
-  campaignId  String?
-  sessionId   String?
-  createdById String
-  contactedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  // Franchise / chain detection — populated by ClassifyLeadsJob.
+  isChain     Boolean?
+  chainName   String?
+  outletCount Int?
 
-  campaign  Campaign?         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  session   DiscoverySession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  createdBy User              @relation("CreatedByUser", fields: [createdById], references: [id])
-  logs      LeadActivity[]
+  campaignId    String?
+  sessionId     String?
+  enrichmentId  String?   @unique
+  createdById   String
+  contactedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  campaign   Campaign?         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  session    DiscoverySession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  enrichment LeadEnrichment?   @relation(fields: [enrichmentId], references: [id], onDelete: SetNull)
+  createdBy  User              @relation("CreatedByUser", fields: [createdById], references: [id])
+  logs       LeadActivity[]
 
   // A business may appear in several campaigns, but only once per campaign.
   @@unique([campaignId, placeId])
@@ -63,6 +71,7 @@ model Lead {
   @@index([sessionId])
   @@index([score])
   @@index([createdAt])
+  @@index([isChain])
   @@map("leads")
 }
 
@@ -149,6 +158,38 @@ model LeadActivity {
 
   @@index([leadId, createdAt])
   @@map("lead_activities")
+}
+
+/// AI enrichment results — one row per lead, populated asynchronously by
+/// ClassifyLeadsJob and WebsiteIntelJob. Nullable columns mean "not yet run".
+model LeadEnrichment {
+  id              String   @id @default(uuid())
+  leadId          String   @unique
+
+  // Classification subagent output.
+  isChain         Boolean?
+  chainName       String?
+  outletCount     Int?
+  classification  String?  // raw JSON from MiMo
+  classifiedAt    DateTime?
+
+  // Website intel subagent output.
+  websiteSummary  String?
+  websiteTech     String?  // JSON array of detected technologies
+  websiteContact  String?  // JSON object {email, phone, address}
+  websiteIntelAt  DateTime?
+
+  // Outreach subagent output — generated on demand, not automatically.
+  outreachDraft   String?
+  outreachDraftAt DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  lead Lead?
+
+  @@index([leadId])
+  @@map("lead_enrichments")
 }
 
 model Settings {

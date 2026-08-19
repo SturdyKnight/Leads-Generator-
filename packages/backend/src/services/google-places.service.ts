@@ -22,6 +22,7 @@ export interface PlaceResult {
   country: string | null;
   locality: string | null;
   phone: string | null;
+  mobile: string | null;
   website: string | null;
   rating: number | null;
   reviewCount: number | null;
@@ -43,7 +44,7 @@ const BASE_URL = 'https://places.googleapis.com/v1';
 
 const ID_ONLY_FIELDS = 'nextPageToken,places.id,places.displayName';
 const DETAIL_FIELDS =
-  'id,displayName,formattedAddress,addressComponents,nationalPhoneNumber,websiteUri,rating,userRatingCount,types';
+  'id,displayName,formattedAddress,addressComponents,nationalPhoneNumber,internationalPhoneNumber,websiteUri,rating,userRatingCount,types';
 
 const MAX_PAGES = 3;
 const MAX_RETRIES = 3;
@@ -243,6 +244,11 @@ function mapPlace(place: any): PlaceResult {
   const component = (type: string) =>
     components.find((c) => c.types?.includes(type))?.longText ?? null;
 
+  // Mobile: prefer international format if it differs from national.
+  const national = place.nationalPhoneNumber ?? null;
+  const international = place.internationalPhoneNumber ?? null;
+  const mobile = international && international !== national ? international : null;
+
   return {
     placeId: place.id,
     name: place.displayName?.text ?? '',
@@ -251,7 +257,8 @@ function mapPlace(place: any): PlaceResult {
     state: component('administrative_area_level_1'),
     country: component('country'),
     locality: component('sublocality') ?? component('neighborhood'),
-    phone: place.nationalPhoneNumber ?? null,
+    phone: national,
+    mobile,
     website: place.websiteUri ?? null,
     rating: place.rating ?? null,
     reviewCount: place.userRatingCount ?? null,

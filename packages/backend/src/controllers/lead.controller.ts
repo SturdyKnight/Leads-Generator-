@@ -5,6 +5,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 import { leadService } from '../services/lead.service.js';
+import { outreachDraftService } from '../services/outreach-draft.service.js';
 import { sseService, SSE_EVENTS } from '../services/sse.service.js';
 
 type Handler = (req: Request, res: Response, next: NextFunction) => Promise<void>;
@@ -64,5 +65,11 @@ export const leadController = {
   getActivities: handle(async (req, res) => {
     const activities = await leadService.getActivities(req.params.id);
     res.json({ success: true, data: activities });
+  }),
+
+  draftOutreach: handle(async (req, res) => {
+    const lead = await leadService.findById(req.params.id);
+    const draft = await outreachDraftService.generate(lead.id, lead.campaignId ?? '');
+    res.json({ success: true, data: draft, message: 'Outreach draft generated' });
   }),
 };

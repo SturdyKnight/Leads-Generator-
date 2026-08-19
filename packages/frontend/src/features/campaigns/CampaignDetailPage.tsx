@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Play, Pause, Archive, Download, Search, Phone, Globe, ChevronLeft, ChevronRight,
-  Users, Gauge, Trophy,
+  Users, Gauge, Trophy, Building2,
 } from 'lucide-react';
 import type { Campaign, CampaignStatus, DiscoverySession, Lead, PaginationMeta } from '@bmatrix/shared';
 import { LEAD_STATUSES } from '@bmatrix/shared';
@@ -14,6 +14,7 @@ import { Card, CardHeader, CardBody, Stat, StatGrid } from '../../components/ui/
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Pill, FilterPill } from '../../components/ui/Pill';
+import { StatusPill } from '../../components/ui/StatusPill';
 import { EmptyState, ErrorState, SkeletonRows } from '../../components/ui/Feedback';
 import { toast, extractMessage } from '../../components/ui/Toast';
 import { SessionPanel } from './SessionPanel';
@@ -34,7 +35,10 @@ function LeadRow({ lead, onOpen }: { lead: Lead; onOpen: () => void }) {
             <span className="truncate text-base font-medium text-slate-900 transition-colors group-hover:text-accent-700">
               {lead.name}
             </span>
-            <Pill tone={leadStatusTone(lead.status)} label={lead.status} />
+            {lead.isChain && (
+              <Building2 className="h-3.5 w-3.5 shrink-0 text-accent-500" aria-label={lead.chainName ?? 'Chain'} />
+            )}
+            <StatusPill status={lead.status} />
           </span>
           <span className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-slate-500">
             {lead.phone && (

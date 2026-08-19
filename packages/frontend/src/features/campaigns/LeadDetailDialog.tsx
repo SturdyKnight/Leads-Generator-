@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Phone, Globe, MapPin, Star, ExternalLink } from 'lucide-react';
+import { Phone, Smartphone, Globe, MapPin, Star, ExternalLink, Building2, Send } from 'lucide-react';
 import type { LeadDetail, LeadStatus } from '@bmatrix/shared';
 import { LEAD_STATUSES } from '@bmatrix/shared';
 import { api } from '../../lib/api-client';
 import { formatRelative, displayUrl } from '../../lib/utils';
-import { leadStatusTone, humanizeStatus, scoreTone } from '../../lib/status';
+import { humanizeStatus, scoreTone } from '../../lib/status';
 import { Dialog } from '../../components/ui/Dialog';
 import { Button } from '../../components/ui/Button';
 import { Textarea, Select } from '../../components/ui/Input';
-import { Pill } from '../../components/ui/Pill';
+import { StatusPill } from '../../components/ui/StatusPill';
 import { SkeletonRows } from '../../components/ui/Feedback';
 import { toast } from '../../components/ui/Toast';
 
@@ -39,6 +39,8 @@ export function LeadDetailDialog({
   });
 
   const lead = data?.data;
+  const enrichment = lead?.enrichment;
+  const outreachDraft = enrichment?.outreachDraft ? JSON.parse(enrichment.outreachDraft) as { subject: string; body: string } : null;
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ['lead', leadId] });
@@ -65,6 +67,15 @@ export function LeadDetailDialog({
     onError: (error) => toast.error(error),
   });
 
+  const draftOutreach = useMutation({
+    mutationFn: () => api.post(`/leads/${leadId}/draft-outreach`),
+    onSuccess: (response) => {
+      toast.success(response.message ?? 'Draft generated');
+      refresh();
+    },
+    onError: (error) => toast.error(error),
+  });
+
   return (
     <Dialog
       open={leadId !== null}
@@ -86,7 +97,7 @@ export function LeadDetailDialog({
               {lead.score}
               <span className="text-sm font-normal text-slate-400">/100</span>
             </span>
-            <Pill tone={leadStatusTone(lead.status)} label={lead.status} />
+            <StatusPill status={lead.status} />
             {lead.rating != null && (
               <span className="flex items-center gap-1 text-xs text-slate-500">
                 <Star className="h-3.5 w-3.5 text-caution-600" aria-hidden />
@@ -94,16 +105,18 @@ export function LeadDetailDialog({
                 <span>({lead.reviewCount ?? 0})</span>
               </span>
             )}
-            {lead.source === 'chain_franchise' && (
-              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
-                Chain
+            {(lead.isChain || lead.source === 'chain_franchise') && (
+              <span className="inline-flex items-center gap-1 rounded bg-accent-50 px-1.5 py-0.5 text-xs font-medium text-accent-700 ring-1 ring-inset ring-accent-200">
+                <Building2 className="h-3 w-3" aria-hidden />
+                {lead.chainName ?? 'Chain'}
+                {lead.outletCount != null && <span className="text-accent-500">({lead.outletCount})</span>}
               </span>
             )}
           </div>
 
           <section className="space-y-2">
             <h3 className="text-xs font-semibold uppercase tracking-label text-slate-500">Contact</h3>
-            {!lead.phone && !lead.website && !lead.address ? (
+            {!lead.phone && !lead.mobile && !lead.website && !lead.address ? (
               <p className="text-sm text-slate-400">
                 Google Places returned no contact details for this business.
               </p>
@@ -114,6 +127,15 @@ export function LeadDetailDialog({
                     <Phone className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
                     <a href={`tel:${lead.phone}`} className="text-accent-700 hover:underline">
                       {lead.phone}
+                    </a>
+                  </div>
+                )}
+                {lead.mobile && lead.mobile !== lead.phone && (
+                  <div className="flex items-center gap-2.5">
+                    <Smartphone className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                    <a href={`tel:${lead.mobile}`} className="text-accent-700 hover:underline">
+                      {lead.mobile}
+                      <span className="ml-1 text-xs text-slate-400">(mobile)</span>
                     </a>
                   </div>
                 )}
@@ -174,6 +196,52 @@ export function LeadDetailDialog({
                 onClick={() => addNote.mutate()}
               >
                 Add note
+              </Button>
+            </div>
+          </section>
+
+          {/* Website intel — only shown when enrichment data exists. */}
+          {enrichment?.websiteSummary && (
+            <section className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-label text-slate-500">Website Intel</h3>
+              <p className="text-sm text-slate-700">{enrichment.websiteSummary}</p>
+              {enrichment.websiteTech && (() => {
+                const tech = JSON.parse(enrichment.websiteTech) as string[];
+                return tech.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {tech.map((t) => (
+                      <span key={t} className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            </section>
+          )}
+
+          {/* Outreach draft — generate on demand, show when available. */}
+          <section className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-label text-slate-500">Outreach</h3>
+            {outreachDraft ? (
+              <div className="space-y-2 rounded-lg bg-accent-50/60 p-3 ring-1 ring-inset ring-accent-100">
+                <p className="text-xs font-medium text-accent-700">{outreachDraft.subject}</p>
+                <p className="whitespace-pre-wrap text-sm text-slate-700">{outreachDraft.body}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">
+                Generate a personalized outreach draft for this lead.
+              </p>
+            )}
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<Send />}
+                loading={draftOutreach.isPending}
+                onClick={() => draftOutreach.mutate()}
+              >
+                {outreachDraft ? 'Regenerate' : 'Generate draft'}
               </Button>
             </div>
           </section>

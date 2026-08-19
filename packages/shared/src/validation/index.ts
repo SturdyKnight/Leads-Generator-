@@ -93,6 +93,9 @@ export const settingsUpdateSchema = z
     timezone: z.string().trim().max(60).optional(),
     defaultCountry: z.string().trim().max(4).optional(),
     defaultMaxResults: z.coerce.number().int().min(1).max(1000).optional(),
+    aiClassificationEnabled: z.boolean().optional(),
+    aiWebsiteIntelEnabled: z.boolean().optional(),
+    aiOutreachEnabled: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, 'Nothing to update');
 

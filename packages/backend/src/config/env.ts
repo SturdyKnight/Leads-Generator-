@@ -37,6 +37,11 @@ const envSchema = z.object({
   // Optional. Enables radius-limited search; without it, radius is ignored.
   GOOGLE_GEOCODING_API_KEY: z.string().optional(),
 
+  // MiMo AI — all features degrade gracefully when not configured.
+  MIMO_API_KEY: z.string().optional(),
+  MIMO_BASE_URL: z.string().url().default('https://api.xiaomimimo.com/v1'),
+  MIMO_MODEL: z.string().default('mimo-v2.5-pro'),
+
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(600),
 

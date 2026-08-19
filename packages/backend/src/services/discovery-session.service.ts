@@ -241,6 +241,15 @@ export class DiscoverySessionService {
       });
 
       logger.info(`Session ${sessionId} ${terminalStatus}: ${discovered} leads`);
+
+      // Fire-and-forget: run AI enrichment jobs if MiMo is configured.
+      if (terminalStatus === 'COMPLETED' && discovered > 0) {
+        void import('./classify-leads.job.js')
+          .then(({ classifyLeadsJob }) => classifyLeadsJob.run(campaignId, sessionId))
+          .then(() => import('./website-intel.job.js'))
+          .then(({ websiteIntelJob }) => websiteIntelJob.run(campaignId, sessionId))
+          .catch((err) => logger.error('AI enrichment job failed', { error: String(err) }));
+      }
     }
 
     return { discovered };
@@ -295,6 +304,7 @@ export class DiscoverySessionService {
               country: detail.country,
               locality: detail.locality,
               phone: detail.phone,
+              mobile: detail.mobile,
               website: detail.website,
               rating: detail.rating,
               reviewCount: detail.reviewCount,

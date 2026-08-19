@@ -13,6 +13,9 @@ export const SETTINGS_DEFAULTS = {
   timezone: 'UTC',
   defaultCountry: 'IN',
   defaultMaxResults: 100,
+  aiClassificationEnabled: true,
+  aiWebsiteIntelEnabled: true,
+  aiOutreachEnabled: true,
 } as const;
 
 export type SettingsKey = keyof typeof SETTINGS_DEFAULTS;

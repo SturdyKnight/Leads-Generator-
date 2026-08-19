@@ -4,7 +4,7 @@ import type { Settings } from '@bmatrix/shared';
 import { api } from '../../lib/api-client';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
+import { Input, Checkbox } from '../../components/ui/Input';
 import { SkeletonRows, ErrorState } from '../../components/ui/Feedback';
 import { toast, extractMessage } from '../../components/ui/Toast';
 
@@ -13,6 +13,9 @@ const DEFAULTS: Settings = {
   timezone: 'UTC',
   defaultCountry: 'IN',
   defaultMaxResults: 100,
+  aiClassificationEnabled: true,
+  aiWebsiteIntelEnabled: true,
+  aiOutreachEnabled: true,
 };
 
 export function SettingsPage() {
@@ -94,6 +97,26 @@ export function SettingsPage() {
                 hint="Pre-filled when starting a new discovery run."
                 onChange={(event) => update('defaultMaxResults', Number(event.target.value))}
               />
+
+              <div className="space-y-3 border-t border-slate-200 pt-4">
+                <h3 className="text-sm font-medium text-slate-900">AI Features (MiMo)</h3>
+                <p className="text-xs text-slate-500">Requires MIMO_API_KEY to be set on the server.</p>
+                <Checkbox
+                  label="Auto-classify chains and franchises"
+                  checked={form.aiClassificationEnabled}
+                  onChange={(checked) => update('aiClassificationEnabled', checked)}
+                />
+                <Checkbox
+                  label="Analyze lead websites for intel"
+                  checked={form.aiWebsiteIntelEnabled}
+                  onChange={(checked) => update('aiWebsiteIntelEnabled', checked)}
+                />
+                <Checkbox
+                  label="Enable AI outreach draft generation"
+                  checked={form.aiOutreachEnabled}
+                  onChange={(checked) => update('aiOutreachEnabled', checked)}
+                />
+              </div>
 
               <div className="flex justify-end">
                 <Button type="submit" loading={save.isPending}>

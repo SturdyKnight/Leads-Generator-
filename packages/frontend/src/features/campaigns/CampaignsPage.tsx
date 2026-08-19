@@ -6,11 +6,12 @@ import type { Campaign, CampaignStatus } from '@bmatrix/shared';
 import { CAMPAIGN_STATUSES, LEAD_STATUSES } from '@bmatrix/shared';
 import { api } from '../../lib/api-client';
 import { formatRelative, pluralize, cn } from '../../lib/utils';
-import { campaignStatusTone, leadStatusTone, humanizeStatus } from '../../lib/status';
+import { campaignStatusTone, humanizeStatus } from '../../lib/status';
 import { Card, CardBody } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Pill } from '../../components/ui/Pill';
+import { StatusPill } from '../../components/ui/StatusPill';
 import { ConfirmDialog } from '../../components/ui/Dialog';
 import { EmptyState, ErrorState, SkeletonRows } from '../../components/ui/Feedback';
 import { toast, extractMessage } from '../../components/ui/Toast';
@@ -25,10 +26,9 @@ function PipelineSummary({ counts }: { counts: Record<string, number> }) {
   return (
     <div className="mt-2 flex flex-wrap gap-1">
       {present.map((status) => (
-        <Pill
+        <StatusPill
           key={status}
-          tone={leadStatusTone(status)}
-          label={status}
+          status={status}
           count={counts[status]}
           size="sm"
         />

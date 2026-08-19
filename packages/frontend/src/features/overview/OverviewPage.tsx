@@ -5,9 +5,10 @@ import type { Campaign, DashboardStats } from '@bmatrix/shared';
 import { LEAD_STATUSES } from '@bmatrix/shared';
 import { api } from '../../lib/api-client';
 import { formatNumber, formatRelative, pluralize } from '../../lib/utils';
-import { leadStatusTone, campaignStatusTone } from '../../lib/status';
+import { campaignStatusTone } from '../../lib/status';
 import { Card, CardHeader, CardBody, Stat, StatGrid } from '../../components/ui/Card';
 import { Pill } from '../../components/ui/Pill';
+import { StatusPill } from '../../components/ui/StatusPill';
 import { EmptyState, ErrorState, SkeletonRows } from '../../components/ui/Feedback';
 import { extractMessage } from '../../components/ui/Toast';
 
@@ -110,10 +111,9 @@ export function OverviewPage() {
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {pipeline.map((status) => (
-                <Pill
+                <StatusPill
                   key={status}
-                  tone={leadStatusTone(status)}
-                  label={status}
+                  status={status}
                   count={data!.leadsByStatus[status]}
                 />
               ))}

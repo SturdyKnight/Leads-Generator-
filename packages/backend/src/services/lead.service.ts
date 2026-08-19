@@ -75,6 +75,7 @@ export class LeadService {
       include: {
         campaign: { select: { id: true, name: true } },
         session: { select: { id: true, name: true } },
+        enrichment: true,
         logs: { orderBy: { createdAt: 'desc' }, take: 50 },
       },
     });

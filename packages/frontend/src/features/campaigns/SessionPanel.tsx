@@ -5,11 +5,10 @@ import type { DiscoverySession } from '@bmatrix/shared';
 import { api } from '../../lib/api-client';
 import { useLive } from '../../hooks/use-sse';
 import { formatRelative, pluralize, cn } from '../../lib/utils';
-import { sessionStatusTone } from '../../lib/status';
 import { Card, CardHeader, CardBody } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Pill } from '../../components/ui/Pill';
+import { StatusPill } from '../../components/ui/StatusPill';
 import { Dialog, ConfirmDialog } from '../../components/ui/Dialog';
 import { ProgressBar, EmptyState } from '../../components/ui/Feedback';
 import { toast } from '../../components/ui/Toast';
@@ -171,7 +170,7 @@ export function SessionPanel({
                         <span className="truncate text-base font-medium text-slate-900">
                           {session.name}
                         </span>
-                        <Pill tone={sessionStatusTone(session.status)} label={session.status} />
+                        <StatusPill status={session.status} />
                       </span>
                       <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
                         <span className="tabular">{pluralize(session.totalLeads, 'lead')}</span>
